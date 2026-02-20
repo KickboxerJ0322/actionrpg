@@ -1,0 +1,27 @@
+# actionrpg
+
+このリポジトリは、**ゼルダの伝説風（2Dトップダウン）アクションRPG**を作るための土台です。
+
+今回は **スマホプレイ前提（モバイルファースト）** で開発する方針に更新しています。
+
+まずは開発計画を確認してください。
+
+- [Zelda-like Action RPG 開発ガイド（スマホ前提）](docs/zelda_action_rpg_guide_ja.md)
+- [GitHub Pages 公開手順（Godot Web版）](docs/github_pages_deploy_ja.md)
+
+
+## Webで今すぐ試せる最小プロトタイプ
+
+- `web/index.html` / `web/game.js` を追加済みです。
+- GitHub Pages公開後は、このWebプロトタイプ（またはGodot Webエクスポート）が自動で配信されます。
+
+## 推奨ディレクトリ構成（再掲）
+
+```text
+actionrpg/
+  game/                   # Godot本体
+  web/                    # Pagesですぐ遊べるHTML/JS版
+  design/                 # 仕様書
+  docs/                   # 開発・公開ドキュメント
+  .github/workflows/      # CI/CD（Pagesデプロイ）
+```
