@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+    <title>ActionRPG Web Prototype</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hud">
+        <div id="hearts" aria-label="health"></div>
+        <p class="label">Mobile Vertical Prototype</p>
+      </header>
+
+      <canvas id="game" width="540" height="960" aria-label="game canvas"></canvas>
+      <p class="tips">左下スティックで移動 / 右下: 魔法→剣（PC: WASD + Shift + Space）</p>
+
+      <section class="controls" aria-label="touch controls">
+        <div id="stickBase" class="stick-base"><div id="stickKnob" class="stick-knob"></div></div>
+        <div class="action-row">
+          <button id="magicBtn" class="action-btn magic">✨</button>
+          <button id="attackBtn" class="action-btn attack">⚔️</button>
+        </div>
+      </section>
+    </main>
+    <script src="./game.js"></script>
+  </body>
+</html>
