@@ -6,7 +6,7 @@ const stickKnob = document.getElementById('stickKnob');
 const attackBtn = document.getElementById('attackBtn');
 const magicBtn = document.getElementById('magicBtn');
 
-const player = { x: 270, y: 700, r: 18, speed: 230, hp: 5, facingX: 0, facingY: -1, attackTime: 0 };
+const player = { x: 270, y: 700, r: 18, speed: 230, hp: 5, facingX: 0, facingY: -1, attackTime: 0, invulnTime: 0 };
 const enemy = { x: 270, y: 220, r: 20, hp: 8, hitCooldown: 0 };
 const projectiles = [];
 const input = { x: 0, y: 0, attack: false, magic: false };
@@ -15,9 +15,23 @@ const stick = { active: false, x: 0, y: 0 };
 let worldTime = 0;
 
 let audioCtx = null;
+let bgmStarted = false;
+const bgm = new Audio('./野良猫は宇宙を目指した_2.mp3');
+bgm.loop = true;
+bgm.volume = 0.35;
+
+function startBgm() {
+  if (bgmStarted) return;
+  bgmStarted = true;
+  bgm.play().catch(() => {
+    bgmStarted = false;
+  });
+}
+
 function ensureAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === 'suspended') audioCtx.resume();
+  startBgm();
 }
 function playTone({ freq = 440, duration = 0.08, type = 'sine', volume = 0.04 }) {
   if (!audioCtx) return;
@@ -50,6 +64,12 @@ function normalize(x, y) {
 }
 function updateHearts() { heartsEl.textContent = '❤️'.repeat(Math.max(0, player.hp)); }
 
+function knockbackTarget(target, fromX, fromY, distance) {
+  const away = normalize(target.x - fromX, target.y - fromY);
+  target.x += away.x * distance;
+  target.y += away.y * distance;
+}
+
 function setupStick() {
   const center = () => {
     const rect = stickBase.getBoundingClientRect();
@@ -81,8 +101,15 @@ function setupStick() {
 }
 
 function spawnMagic() {
-  const dir = normalize(player.facingX, player.facingY);
+  const dir = getAutoAimDirection();
   projectiles.push({ x: player.x + dir.x * 26, y: player.y + dir.y * 26, vx: dir.x * 420, vy: dir.y * 420, ttl: 0.9, r: 8 });
+}
+
+function getAutoAimDirection() {
+  const toEnemyX = enemy.x - player.x;
+  const toEnemyY = enemy.y - player.y;
+  if (Math.hypot(toEnemyX, toEnemyY) > 0.001) return normalize(toEnemyX, toEnemyY);
+  return normalize(player.facingX, player.facingY);
 }
 
 window.addEventListener('keydown', (e) => {
@@ -122,11 +149,15 @@ function loop(now) {
   player.y = clamp(player.y, player.r, canvas.height - player.r);
 
   if (input.attack && player.attackTime <= 0) {
+    const dir = getAutoAimDirection();
+    player.facingX = dir.x;
+    player.facingY = dir.y;
     player.attackTime = 0.16;
-    const swordX = player.x + player.facingX * 38;
-    const swordY = player.y + player.facingY * 38;
+    const swordX = player.x + dir.x * 38;
+    const swordY = player.y + dir.y * 38;
     if (Math.hypot(enemy.x - swordX, enemy.y - swordY) < enemy.r + 20) {
       enemy.hp -= 1;
+      knockbackTarget(enemy, player.x, player.y, 16);
       playHitEnemySfx();
     }
   }
@@ -142,6 +173,7 @@ function loop(now) {
 
     if (Math.hypot(enemy.x - p.x, enemy.y - p.y) < enemy.r + p.r) {
       enemy.hp -= 2;
+      knockbackTarget(enemy, p.x, p.y, 24);
       playHitEnemySfx();
       projectiles.splice(i, 1);
       continue;
@@ -154,11 +186,18 @@ function loop(now) {
   const toPlayer = normalize(player.x - enemy.x, player.y - enemy.y);
   enemy.x += toPlayer.x * 78 * dt;
   enemy.y += toPlayer.y * 78 * dt;
+  enemy.x = clamp(enemy.x, enemy.r, canvas.width - enemy.r);
+  enemy.y = clamp(enemy.y, enemy.r, canvas.height - enemy.r);
 
   if (enemy.hitCooldown > 0) enemy.hitCooldown -= dt;
+  if (player.invulnTime > 0) player.invulnTime -= dt;
   const collide = Math.hypot(enemy.x - player.x, enemy.y - player.y) < enemy.r + player.r;
-  if (collide && enemy.hitCooldown <= 0) {
+  if (collide && enemy.hitCooldown <= 0 && player.invulnTime <= 0) {
     player.hp -= 1;
+    player.invulnTime = 1.0;
+    knockbackTarget(player, enemy.x, enemy.y, 28);
+    player.x = clamp(player.x, player.r, canvas.width - player.r);
+    player.y = clamp(player.y, player.r, canvas.height - player.r);
     playPlayerDamagedSfx();
     enemy.hitCooldown = 1.0;
   }
@@ -212,6 +251,7 @@ function render() {
 }
 
 function drawPlayer(p, time) {
+  if (p.invulnTime > 0 && Math.floor(time * 20) % 2 === 0) return;
   const bob = Math.sin(time * 10) * 1.5;
 
   ctx.fillStyle = '#00000055';
