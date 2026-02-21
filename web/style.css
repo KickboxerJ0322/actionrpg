@@ -12,9 +12,10 @@ body {
   max-width: 540px;
   min-height: 100dvh;
   margin: 0 auto;
-  padding: 8px 12px calc(14px + var(--safe-bottom));
+  padding: 8px 12px calc(10px + var(--safe-bottom));
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 .hud {
   display: flex;
@@ -24,8 +25,11 @@ body {
 #hearts { font-size: 24px; }
 .label, .tips { color: #c9d1d9; margin: 8px 0; }
 #game {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  height: min(56dvh, 620px);
   aspect-ratio: 9 / 16;
+  align-self: center;
   border: 2px solid #30363d;
   border-radius: 10px;
   background: #0f5132;
@@ -83,8 +87,7 @@ body {
     padding: 8px 12px 12px;
   }
   #game {
-    width: auto;
-    height: min(62dvh, 700px);
+    height: min(60dvh, 700px);
     max-width: 100%;
     align-self: center;
   }
