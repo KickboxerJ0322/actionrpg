@@ -1,0 +1,29 @@
+/* Branch-specific UI/theme overrides to avoid style.css conflicts */
+.hud-left { display: flex; flex-direction: column; gap: 4px; }
+.app-title {
+  color: #fde68a;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.score { color: #c9d1d9; margin: 0; font-weight: 700; }
+
+/* Mobile field widening overrides */
+.app { max-width: 620px; }
+#game {
+  width: 100%;
+  height: min(52dvh, 560px);
+  aspect-ratio: auto;
+}
+
+@media (min-width: 900px) {
+  .app {
+    max-width: 560px;
+    padding: 8px 12px 12px;
+  }
+  #game {
+    height: min(58dvh, 680px);
+    max-width: 100%;
+    align-self: center;
+  }
+}
