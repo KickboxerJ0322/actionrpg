@@ -14,22 +14,22 @@
 }
 .score { color: #c9d1d9; margin: 0; font-weight: 700; }
 
-/* Keep the same portrait playfield ratio across devices */
-.app { max-width: 540px; }
+/* Slightly larger field while keeping a smartphone-like portrait ratio */
+.app { max-width: 600px; }
 #game {
   width: auto;
   max-width: 100%;
-  height: min(56dvh, 620px);
+  height: min(68dvh, 760px);
   aspect-ratio: 9 / 16;
 }
 
 @media (min-width: 900px) {
   .app {
-    max-width: 460px;
+    max-width: 520px;
     padding: 8px 12px 12px;
   }
   #game {
-    height: min(60dvh, 700px);
+    height: min(74dvh, 840px);
     max-width: 100%;
     align-self: center;
   }
