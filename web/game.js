@@ -4,6 +4,8 @@ const heartsEl = document.getElementById('hearts');
 const scoreEl = document.getElementById('score');
 const stickBase = document.getElementById('stickBase');
 const stickKnob = document.getElementById('stickKnob');
+const gameOverPanel = document.getElementById('gameOverPanel');
+const retryBtn = document.getElementById('retryBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 const attackBtn = document.getElementById('attackBtn');
 const magicBtn = document.getElementById('magicBtn');
@@ -22,7 +24,11 @@ const player = {
   attackDirY: -1,
   invulnTime: 0,
 };
-const enemy = { x: canvas.width / 2, y: canvas.height * 0.24, r: 20, hp: 8, hitCooldown: 0 };
+const enemies = [];
+const ENEMY_MAX = 6;
+let enemyTargetCount = 1;
+let enemyGrowthTimer = 0;
+const ENEMY_GROWTH_INTERVAL = 22;
 const projectiles = [];
 const input = { x: 0, y: 0, attack: false, magic: false };
 const keys = new Set();
@@ -30,10 +36,17 @@ const stick = { active: false, x: 0, y: 0 };
 let worldTime = 0;
 let score = 0;
 let isPaused = false;
+let isGameOver = false;
 
 function setPaused(nextPaused) {
+  if (isGameOver) return;
   isPaused = nextPaused;
   pauseBtn.textContent = isPaused ? '▶️' : '⏸️';
+}
+
+function setGameOver(nextGameOver) {
+  isGameOver = nextGameOver;
+  gameOverPanel.classList.toggle('hidden', !isGameOver);
 }
 
 let audioCtx = null;
@@ -99,6 +112,43 @@ function knockbackTarget(target, fromX, fromY, distance) {
   target.y += away.y * distance;
 }
 
+function createEnemy() {
+  return {
+    x: 120 + Math.random() * (canvas.width - 240),
+    y: 120 + Math.random() * Math.max(180, canvas.height * 0.35),
+    r: 20,
+    hp: 8,
+    hitCooldown: 0,
+  };
+}
+
+function refillEnemies() {
+  while (enemies.length < enemyTargetCount) enemies.push(createEnemy());
+}
+
+function resetGame() {
+  score = 0;
+  updateScore();
+  player.hp = 5;
+  player.x = canvas.width / 2;
+  player.y = canvas.height * 0.73;
+  player.invulnTime = 0;
+  player.attackTime = 0;
+  player.facingX = 0;
+  player.facingY = -1;
+  player.attackDirX = 0;
+  player.attackDirY = -1;
+  projectiles.length = 0;
+  enemies.length = 0;
+  enemyTargetCount = 1;
+  enemyGrowthTimer = 0;
+  refillEnemies();
+  updateHearts();
+  isPaused = false;
+  pauseBtn.textContent = '⏸️';
+  setGameOver(false);
+}
+
 function setupStick() {
   const center = () => {
     const rect = stickBase.getBoundingClientRect();
@@ -135,9 +185,19 @@ function spawnMagic() {
 }
 
 function getAutoAimDirection() {
-  const toEnemyX = enemy.x - player.x;
-  const toEnemyY = enemy.y - player.y;
-  if (Math.hypot(toEnemyX, toEnemyY) > 0.001) return normalize(toEnemyX, toEnemyY);
+  if (enemies.length > 0) {
+    let nearest = enemies[0];
+    let nearestDist = Math.hypot(nearest.x - player.x, nearest.y - player.y);
+    for (let i = 1; i < enemies.length; i += 1) {
+      const e = enemies[i];
+      const d = Math.hypot(e.x - player.x, e.y - player.y);
+      if (d < nearestDist) {
+        nearest = e;
+        nearestDist = d;
+      }
+    }
+    return normalize(nearest.x - player.x, nearest.y - player.y);
+  }
   return normalize(player.facingX, player.facingY);
 }
 
@@ -153,6 +213,7 @@ window.addEventListener('keydown', ensureAudio);
 attackBtn.addEventListener('pointerdown', () => { input.attack = true; });
 magicBtn.addEventListener('pointerdown', () => { input.magic = true; });
 pauseBtn.addEventListener('pointerdown', () => setPaused(!isPaused));
+retryBtn.addEventListener('pointerdown', () => resetGame());
 
 let last = performance.now();
 function loop(now) {
@@ -164,8 +225,19 @@ function loop(now) {
     requestAnimationFrame(loop);
     return;
   }
+  if (isGameOver) {
+    render();
+    requestAnimationFrame(loop);
+    return;
+  }
 
   worldTime += dt;
+  enemyGrowthTimer += dt;
+  if (enemyGrowthTimer >= ENEMY_GROWTH_INTERVAL) {
+    enemyGrowthTimer = 0;
+    enemyTargetCount = Math.min(ENEMY_MAX, enemyTargetCount + 1);
+  }
+  refillEnemies();
 
   if (keys.has('KeyW')) input.y = -1;
   else if (keys.has('KeyS')) input.y = 1;
@@ -195,10 +267,12 @@ function loop(now) {
     player.attackTime = ATTACK_DURATION;
     const swordX = player.x + dir.x * 46;
     const swordY = player.y + dir.y * 46;
-    if (Math.hypot(enemy.x - swordX, enemy.y - swordY) < enemy.r + 20) {
-      enemy.hp -= 1;
-      knockbackTarget(enemy, player.x, player.y, 16);
-      playHitEnemySfx();
+    for (const e of enemies) {
+      if (Math.hypot(e.x - swordX, e.y - swordY) < e.r + 20) {
+        e.hp -= 2;
+        knockbackTarget(e, player.x, player.y, 16);
+        playHitEnemySfx();
+      }
     }
   }
   if (input.magic) spawnMagic();
@@ -211,10 +285,17 @@ function loop(now) {
     p.y += p.vy * dt;
     p.ttl -= dt;
 
-    if (Math.hypot(enemy.x - p.x, enemy.y - p.y) < enemy.r + p.r) {
-      enemy.hp -= 2;
-      knockbackTarget(enemy, p.x, p.y, 24);
-      playHitEnemySfx();
+    let hitEnemy = false;
+    for (const e of enemies) {
+      if (Math.hypot(e.x - p.x, e.y - p.y) < e.r + p.r) {
+        e.hp -= 2;
+        knockbackTarget(e, p.x, p.y, 24);
+        playHitEnemySfx();
+        hitEnemy = true;
+        break;
+      }
+    }
+    if (hitEnemy) {
       projectiles.splice(i, 1);
       continue;
     }
@@ -223,37 +304,44 @@ function loop(now) {
     }
   }
 
-  const toPlayer = normalize(player.x - enemy.x, player.y - enemy.y);
-  enemy.x += toPlayer.x * 78 * dt;
-  enemy.y += toPlayer.y * 78 * dt;
-  enemy.x = clamp(enemy.x, enemy.r, canvas.width - enemy.r);
-  enemy.y = clamp(enemy.y, enemy.r, canvas.height - enemy.r);
+  for (const e of enemies) {
+    const toPlayer = normalize(player.x - e.x, player.y - e.y);
+    e.x += toPlayer.x * 78 * dt;
+    e.y += toPlayer.y * 78 * dt;
+    e.x = clamp(e.x, e.r, canvas.width - e.r);
+    e.y = clamp(e.y, e.r, canvas.height - e.r);
+    if (e.hitCooldown > 0) e.hitCooldown -= dt;
+  }
 
-  if (enemy.hitCooldown > 0) enemy.hitCooldown -= dt;
   if (player.invulnTime > 0) player.invulnTime -= dt;
-  const collide = Math.hypot(enemy.x - player.x, enemy.y - player.y) < enemy.r + player.r;
-  if (collide && enemy.hitCooldown <= 0 && player.invulnTime <= 0) {
-    player.hp -= 1;
-    player.invulnTime = 1.0;
-    knockbackTarget(player, enemy.x, enemy.y, 28);
-    player.x = clamp(player.x, player.r, canvas.width - player.r);
-    player.y = clamp(player.y, player.r, canvas.height - player.r);
-    playPlayerDamagedSfx();
-    enemy.hitCooldown = 1.0;
+  if (player.invulnTime <= 0) {
+    for (const e of enemies) {
+      const collide = Math.hypot(e.x - player.x, e.y - player.y) < e.r + player.r;
+      if (collide && e.hitCooldown <= 0) {
+        player.hp -= 1;
+        player.invulnTime = 1.0;
+        knockbackTarget(player, e.x, e.y, 28);
+        player.x = clamp(player.x, player.r, canvas.width - player.r);
+        player.y = clamp(player.y, player.r, canvas.height - player.r);
+        playPlayerDamagedSfx();
+        e.hitCooldown = 1.0;
+        break;
+      }
+    }
   }
 
-  if (enemy.hp <= 0) {
-    score += 100;
-    updateScore();
-    playEnemyDefeatedSfx();
-    enemy.hp = 8;
-    enemy.x = 120 + Math.random() * (canvas.width - 240);
-    enemy.y = 120 + Math.random() * Math.max(180, canvas.height * 0.35);
+  for (let i = enemies.length - 1; i >= 0; i -= 1) {
+    if (enemies[i].hp <= 0) {
+      score += 100;
+      updateScore();
+      playEnemyDefeatedSfx();
+      enemies.splice(i, 1);
+    }
   }
+  refillEnemies();
   if (player.hp <= 0) {
-    player.hp = 5;
-    player.x = canvas.width / 2;
-    player.y = canvas.height * 0.73;
+    setGameOver(true);
+    setPaused(false);
   }
 
   player.attackTime = Math.max(0, player.attackTime - dt);
@@ -291,12 +379,13 @@ function render() {
     ctx.fill();
   }
 
-  drawEnemy(enemy, worldTime);
-
-  ctx.fillStyle = '#111827';
-  ctx.fillRect(enemy.x - 24, enemy.y - 34, 48, 6);
-  ctx.fillStyle = '#ef4444';
-  ctx.fillRect(enemy.x - 24, enemy.y - 34, (48 * enemy.hp) / 8, 6);
+  for (const e of enemies) {
+    drawEnemy(e, worldTime);
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(e.x - 24, e.y - 34, 48, 6);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(e.x - 24, e.y - 34, (48 * e.hp) / 8, 6);
+  }
 
   if (isPaused) {
     ctx.fillStyle = '#00000088';
@@ -307,6 +396,14 @@ function render() {
     ctx.fillText('PAUSED', canvas.width / 2, canvas.height / 2);
     ctx.font = '24px sans-serif';
     ctx.fillText('⏸️ でもう一度再開', canvas.width / 2, canvas.height / 2 + 40);
+  }
+  if (isGameOver) {
+    ctx.fillStyle = '#00000099';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#fca5a5';
+    ctx.font = 'bold 62px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 10);
   }
 }
 
@@ -426,6 +523,7 @@ function drawEnemy(e, time) {
 }
 
 setupStick();
+refillEnemies();
 updateHearts();
 updateScore();
 requestAnimationFrame(loop);

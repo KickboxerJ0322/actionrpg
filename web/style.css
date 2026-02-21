@@ -35,6 +35,28 @@ body {
   background: #0f5132;
   touch-action: none;
 }
+.gameover-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: -6px;
+}
+.hidden { display: none; }
+.gameover-text {
+  margin: 0;
+  color: #fecaca;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.retry-btn {
+  border: 1px solid #fecaca;
+  background: #7f1d1d;
+  color: #fff;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 10px;
+}
 .controls {
   margin-top: auto;
   width: 100%;
@@ -65,14 +87,14 @@ body {
 .action-row {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 6px;
 }
 .action-btn {
-  width: 84px;
-  height: 84px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   color: #fff;
-  font-size: 28px;
+  font-size: 18px;
   background: #ffffff22;
   border: 1px solid #ffffff66;
   backdrop-filter: blur(2px);
@@ -104,8 +126,8 @@ body {
     top: 28px;
   }
   .action-btn {
-    width: 76px;
-    height: 76px;
-    font-size: 24px;
+    width: 46px;
+    height: 46px;
+    font-size: 20px;
   }
 }
