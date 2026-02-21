@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-    <title>ファンタジーワールド</title>
+    <title>Last Knight</title>
     <link rel="stylesheet" href="./style.css" />
     <link rel="stylesheet" href="./theme.css" />
   </head>
@@ -11,17 +11,22 @@
     <main class="app">
       <header class="hud">
         <div class="hud-left">
-          <p class="app-title">ファンタジーワールド</p>
+          <p class="app-title">Last Knight</p>
           <div id="hearts" aria-label="health"></div>
         </div>
         <p id="score" class="score">Score: 0</p>
       </header>
 
-      <canvas id="game" width="540" height="960" aria-label="game canvas"></canvas>
+      <canvas id="game" width="576" height="1024" aria-label="game canvas"></canvas>
+      <div id="gameOverPanel" class="gameover-panel hidden" aria-live="polite">
+        <p class="gameover-text">GAME OVER</p>
+        <button id="retryBtn" class="retry-btn" type="button">リトライ</button>
+      </div>
 
       <section class="controls" aria-label="touch controls">
         <div id="stickBase" class="stick-base"><div id="stickKnob" class="stick-knob"></div></div>
         <div class="action-row">
+          <button id="pauseBtn" class="action-btn pause" aria-label="pause game">⏸️</button>
           <button id="magicBtn" class="action-btn magic">✨</button>
           <button id="attackBtn" class="action-btn attack">⚔️</button>
         </div>
