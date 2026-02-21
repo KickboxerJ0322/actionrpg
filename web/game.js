@@ -79,6 +79,12 @@ function knockbackTarget(target, fromX, fromY, distance) {
   target.y += away.y * distance;
 }
 
+function knockbackTarget(target, fromX, fromY, distance) {
+  const away = normalize(target.x - fromX, target.y - fromY);
+  target.x += away.x * distance;
+  target.y += away.y * distance;
+}
+
 function setupStick() {
   const center = () => {
     const rect = stickBase.getBoundingClientRect();
