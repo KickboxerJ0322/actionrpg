@@ -50,18 +50,18 @@ function playTone({ freq = 440, duration = 0.08, type = 'sine', volume = 0.04 })
 }
 function playHitEnemySfx() {
   ensureAudio();
-  playTone({ freq: 780, duration: 0.05, type: 'square', volume: 0.05 });
-  playTone({ freq: 520, duration: 0.07, type: 'triangle', volume: 0.035 });
+  playTone({ freq: 780, duration: 0.05, type: 'square', volume: 0.075 });
+  playTone({ freq: 520, duration: 0.07, type: 'triangle', volume: 0.055 });
 }
 function playPlayerDamagedSfx() {
   ensureAudio();
-  playTone({ freq: 180, duration: 0.12, type: 'sawtooth', volume: 0.07 });
+  playTone({ freq: 180, duration: 0.12, type: 'sawtooth', volume: 0.095 });
 }
 function playEnemyDefeatedSfx() {
   ensureAudio();
-  playTone({ freq: 520, duration: 0.08, type: 'triangle', volume: 0.055 });
-  playTone({ freq: 780, duration: 0.11, type: 'triangle', volume: 0.05 });
-  playTone({ freq: 1040, duration: 0.15, type: 'sine', volume: 0.045 });
+  playTone({ freq: 520, duration: 0.08, type: 'triangle', volume: 0.08 });
+  playTone({ freq: 780, duration: 0.11, type: 'triangle', volume: 0.075 });
+  playTone({ freq: 1040, duration: 0.15, type: 'sine', volume: 0.07 });
 }
 
 
