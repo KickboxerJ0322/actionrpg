@@ -20,7 +20,7 @@ let audioCtx = null;
 let bgmStarted = false;
 const bgm = new Audio('./野良猫は宇宙を目指した_2.mp3');
 bgm.loop = true;
-bgm.volume = 0.35;
+bgm.volume = 0.5;
 
 function startBgm() {
   if (bgmStarted) return;
@@ -50,12 +50,18 @@ function playTone({ freq = 440, duration = 0.08, type = 'sine', volume = 0.04 })
 }
 function playHitEnemySfx() {
   ensureAudio();
-  playTone({ freq: 780, duration: 0.05, type: 'square', volume: 0.05 });
-  playTone({ freq: 520, duration: 0.07, type: 'triangle', volume: 0.035 });
+  playTone({ freq: 780, duration: 0.05, type: 'square', volume: 0.1 });
+  playTone({ freq: 520, duration: 0.07, type: 'triangle', volume: 0.07 });
 }
 function playPlayerDamagedSfx() {
   ensureAudio();
-  playTone({ freq: 180, duration: 0.12, type: 'sawtooth', volume: 0.07 });
+  playTone({ freq: 180, duration: 0.12, type: 'sawtooth', volume: 0.12 });
+}
+function playEnemyDefeatedSfx() {
+  ensureAudio();
+  playTone({ freq: 440, duration: 0.08, type: 'triangle', volume: 0.1 });
+  playTone({ freq: 660, duration: 0.1, type: 'square', volume: 0.09 });
+  playTone({ freq: 880, duration: 0.14, type: 'triangle', volume: 0.08 });
 }
 
 
@@ -66,12 +72,6 @@ function normalize(x, y) {
 }
 function updateHearts() { heartsEl.textContent = '❤️'.repeat(Math.max(0, player.hp)); }
 function updateScore() { scoreEl.textContent = `Score: ${score}`; }
-
-function knockbackTarget(target, fromX, fromY, distance) {
-  const away = normalize(target.x - fromX, target.y - fromY);
-  target.x += away.x * distance;
-  target.y += away.y * distance;
-}
 
 function knockbackTarget(target, fromX, fromY, distance) {
   const away = normalize(target.x - fromX, target.y - fromY);
@@ -214,6 +214,7 @@ function loop(now) {
   if (enemy.hp <= 0) {
     score += 100;
     updateScore();
+    playEnemyDefeatedSfx();
     enemy.hp = 8;
     enemy.x = 120 + Math.random() * 300;
     enemy.y = 120 + Math.random() * 260;

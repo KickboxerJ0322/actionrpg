@@ -1,28 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap');
+
 /* Branch-specific UI/theme overrides to avoid style.css conflicts */
 .hud-left { display: flex; flex-direction: column; gap: 4px; }
 .app-title {
   color: #fde68a;
   margin: 0;
+  font-family: 'Cinzel Decorative', 'Yuji Mai', 'Times New Roman', serif;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: clamp(1.1rem, 2.8vw, 1.5rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px #f59e0b66, 0 2px 0 #422006;
 }
 .score { color: #c9d1d9; margin: 0; font-weight: 700; }
 
-/* Mobile field widening overrides */
-.app { max-width: 620px; }
+/* Keep the same portrait playfield ratio across devices */
+.app { max-width: 540px; }
 #game {
-  width: 100%;
-  height: min(52dvh, 560px);
-  aspect-ratio: auto;
+  width: auto;
+  max-width: 100%;
+  height: min(56dvh, 620px);
+  aspect-ratio: 9 / 16;
 }
 
 @media (min-width: 900px) {
   .app {
-    max-width: 560px;
+    max-width: 460px;
     padding: 8px 12px 12px;
   }
   #game {
-    height: min(58dvh, 680px);
+    height: min(60dvh, 700px);
     max-width: 100%;
     align-self: center;
   }
